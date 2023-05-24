@@ -1,27 +1,28 @@
-import { chain, configureChains, createClient } from 'wagmi'
+import { configureChains, createConfig } from 'wagmi'
+import { foundry, mainnet, optimism, polygon } from 'wagmi/chains'
 import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
 import { MockConnector } from 'wagmi/connectors/mock'
 import { alchemyProvider } from 'wagmi/providers/alchemy'
 import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
 import { publicProvider } from 'wagmi/providers/public'
 
-import { getSigners } from '../test'
+import { getMockWalletClient } from '../test/utils'
 
 const isTest = process.env.NEXT_PUBLIC_PLAYWRIGHT_ENABLED
 
-const { chains, provider, webSocketProvider } = isTest
+const { chains, publicClient, webSocketPublicClient } = isTest
   ? configureChains(
-      [chain.foundry],
+      [foundry],
       [
         jsonRpcProvider({
           rpc: (chain_) => ({
-            http: chain_.rpcUrls.default,
+            http: chain_.rpcUrls.default.http[0],
           }),
         }),
       ],
     )
   : configureChains(
-      [chain.mainnet, chain.optimism, chain.polygon, chain.rinkeby],
+      [mainnet, optimism, polygon],
       [
         alchemyProvider({
           // This is Alchemy's default API key.
@@ -33,7 +34,7 @@ const { chains, provider, webSocketProvider } = isTest
     )
 
 const connectors = isTest
-  ? [new MockConnector({ options: { signer: getSigners()[0] } })]
+  ? [new MockConnector({ options: { walletClient: getMockWalletClient() } })]
   : [
       new MetaMaskConnector({
         chains,
@@ -41,9 +42,9 @@ const connectors = isTest
       }),
     ]
 
-export const client = createClient({
+export const config = createConfig({
   autoConnect: !isTest,
   connectors,
-  provider,
-  webSocketProvider,
+  publicClient,
+  webSocketPublicClient,
 })

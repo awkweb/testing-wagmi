@@ -7,10 +7,10 @@ import {
   UserEvent,
   act,
   addressRegex,
-  getSigners,
+  getMockWalletClient,
   render,
   screen,
-  setupClient,
+  setupConfig,
   userEvent,
   waitFor,
 } from '../test'
@@ -42,11 +42,11 @@ describe('<Connect />', () => {
   })
 
   it('fails to connect', async () => {
-    const client = setupClient({
+    const config = setupConfig({
       connectors: [
         new MockConnector({
           options: {
-            signer: getSigners()[0]!,
+            walletClient: getMockWalletClient(),
             // Turn on `failConnect` flag to simulate connect failure
             flags: { failConnect: true },
           },
@@ -56,7 +56,7 @@ describe('<Connect />', () => {
 
     render(<Connect />, {
       wrapper: ({ children }: { children: React.ReactNode }) => (
-        <Providers client={client}>{children}</Providers>
+        <Providers config={config}>{children}</Providers>
       ),
     })
 
@@ -65,7 +65,7 @@ describe('<Connect />', () => {
     user.click(connectButton)
     await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
     expect(screen.getByRole('alert')).toHaveTextContent(
-      /user rejected request/i,
+      /user rejected the request/i,
     )
   })
 })

@@ -3,37 +3,39 @@ import { default as userEvent } from '@testing-library/user-event'
 import * as React from 'react'
 
 import {
-  CreateClientConfig,
+  CreateConfigParameters,
   WagmiConfig,
   WagmiConfigProps,
-  createClient,
-  defaultChains,
+  WalletClient,
+  createConfig,
 } from 'wagmi'
 import { MockConnector } from 'wagmi/connectors/mock'
 
-import { WalletSigner, getProvider, getSigners } from './utils'
+import { getMockWalletClient, getPublicClient } from './utils'
 
-type SetupClient = Partial<CreateClientConfig> & { signer?: WalletSigner }
-export function setupClient({
-  signer = getSigners()[0],
+type SetupClient = Partial<CreateConfigParameters> & {
+  walletClient?: WalletClient
+}
+export function setupConfig({
+  walletClient = getMockWalletClient(),
   ...config
 }: SetupClient = {}) {
-  return createClient({
-    connectors: [new MockConnector({ options: { signer } })],
-    provider: ({ chainId }) => getProvider({ chainId, chains: defaultChains }),
+  return createConfig({
+    connectors: [new MockConnector({ options: { walletClient } })],
+    publicClient: ({ chainId }) => getPublicClient({ chainId }),
     ...config,
   })
 }
 
 type ProvidersProps = {
   children: React.ReactNode
-  client?: WagmiConfigProps['client']
+  config?: WagmiConfigProps['config']
 }
 export function Providers({
   children,
-  client = setupClient(),
+  config = setupConfig(),
 }: ProvidersProps) {
-  return <WagmiConfig client={client}>{children}</WagmiConfig>
+  return <WagmiConfig config={config}>{children}</WagmiConfig>
 }
 
 const customRender = (ui: React.ReactElement, options?: RenderOptions) =>
@@ -45,9 +47,4 @@ export { customRender as render }
 export type UserEvent = ReturnType<typeof userEvent.setup>
 export { default as userEvent } from '@testing-library/user-event'
 
-export {
-  addressRegex,
-  getSigners,
-  getProvider,
-  getWebSocketProvider,
-} from './utils'
+export { addressRegex, getMockWalletClient } from './utils'

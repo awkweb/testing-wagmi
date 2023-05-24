@@ -1,5 +1,5 @@
-import { parseEther } from 'ethers/lib/utils'
 import * as React from 'react'
+import { parseEther } from 'viem'
 import {
   useAccount,
   usePrepareSendTransaction,
@@ -20,10 +20,8 @@ export function SendTip({
   const [value, setValue] = React.useState(defaultValue)
 
   const { config } = usePrepareSendTransaction({
-    request: {
-      to,
-      value: value ? parseEther(value) : undefined,
-    },
+    to,
+    value: value ? parseEther(value as `${number}`) : undefined,
     enabled: isConnected,
   })
 
